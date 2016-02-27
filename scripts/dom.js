@@ -1,29 +1,40 @@
 define('scripts/dom', function () {
     'use strict';
 
-    function update (rootId, elementTree) {
-        function _cleanTree (node) {
-            if (node.render)
-                node = node.render();
+    const TEXT_NODE = 'textnode';
+
+    function _cleanTree (node) {
+        if (node.render)
+            node = node.render();
+
+        if (node.children) {
             node.children = node.children.reduce((prev, curr) =>  prev.concat(curr), [])
             node.children = node.children.map(_cleanTree);
-            return node;
+        }
+        return node;
+    }
+
+    function drawAttrs (attrs) {
+        return Object.keys(attrs).reduce((prev, key) => `${prev} ${key}=\"${attrs[key]}\"`, '')
+    }
+
+    function drawNodes (prev, node) {
+        if (typeof node === 'string')
+            return prev + node;
+
+        let attrs = drawAttrs(node.attrs);
+        if (node.children.length > 0) {
+            let inner = node.children.reduce(drawNodes, '');
+            return `${prev}<${node.name}${attrs}>${inner}</${node.name}>`
         }
 
-        function _drawAttrs (attrs) {
-            return Object.keys(attrs).reduce((prev, key) => `${prev} ${key}=\"${attrs[key]}\"`, '')
-        }
+        return `${prev}<${node.name}${attrs}/>`
+    }
 
-        function _drawHtml (prev, curr) {
-            let attrs = _drawAttrs(curr.attrs);
-            if (curr.children.length > 0) {
-                let inner = curr.children.reduce(_drawHtml, '');
-                return `${prev}<${curr.name}${attrs}>${inner}</${curr.name}>`
-            }
-            return `${prev}<${curr.name}${attrs}/>`
-        }
-
-        rootId.innerHTML = [elementTree].map(_cleanTree).reduce(_drawHtml, '');
+    function update (rootId, elementTree) {
+        let newTree = [elementTree].map(_cleanTree);
+        let newHtml = newTree.reduce(drawNodes, '');
+        rootId.innerHTML = newHtml;
     }
 
     function el (name, attrs) {

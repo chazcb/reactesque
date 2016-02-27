@@ -18,7 +18,8 @@ define('app', function (require) {
         render() {
             return (
                 el('div', {'class': 'photo'},
-                    el('img', {src: this.data.media.m})
+                    el('img', {src: this.data.media.m}),
+                    el('h2', {}, this.data.author)
                 )
             )
         }
