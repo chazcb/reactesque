@@ -1,0 +1,41 @@
+body {
+    font-family: sans-serif;
+}
+
+html, body{
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+#main {
+    overflow: auto;
+    height: 100%;
+    width: 100%;
+    padding-right: 15px;
+}
+
+.photos {
+    border: thin solid gray;
+}
+
+.photo {
+    border: thin solid black;
+}
+
+.navbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border: thin solid red;
+}
+
+.navbar .navitem {
+    display: block;
+    width: 50%;
+    float: left;
+    height: 50px;
+    text-align: center;
+}
