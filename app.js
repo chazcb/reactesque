@@ -7,18 +7,49 @@ define('app', function (require) {
 
     // -------- data ---------
 
-    let DATA_STORE = {
-        saved: [],
-        savedByLink: {},
-        photos: [],
-        photosByLink: {}
-    };
+    const STORAGE_KEY = '__virta__';
+    function persistData() {
+        localStorage[STORAGE_KEY] = JSON.stringify(DATA_STORE);
+    }
 
-    function getPhotos () {
+    function getInitialData() {
+        var previous = {};
+        try {
+            previous = JSON.parse(localStorage[STORAGE_KEY]);
+        } catch (e) {};
+
+        return Object.assign({
+            currentRoute: 'feed',
+            saved: [],
+            savedByLink: {},
+            photos: [],
+            photosByLink: {},
+        }, previous);
+    }
+
+    let DATA_STORE = getInitialData();
+
+    function updateRoute(route) {
+        if (DATA_STORE.currentRoute !== route) {
+            DATA_STORE.currentRoute = route;
+            update(appElement, app);
+            persistData();
+        }
+    }
+
+    function getCurrentRoute() {
+        return DATA_STORE.currentRoute;
+    }
+
+    function getPhotos() {
         return DATA_STORE.photos;
     }
 
-    function updatePhotos (items) {
+    function getSavedPhotos() {
+        return DATA_STORE.saved;
+    }
+
+    function updatePhotos(items) {
         let changed;
         items.forEach((item) => {
             if (!DATA_STORE.photosByLink[item.link]) {
@@ -27,24 +58,27 @@ define('app', function (require) {
                 DATA_STORE.photosByLink[item.link] = item;
             }
         });
-        if (changed)
+        if (changed) {
             update(appElement, app);
+            persistData();
+        }
     }
 
-    function isPhotoSaved (photo) {
+    function isPhotoSaved(photo) {
         return Boolean(DATA_STORE.savedByLink[photo.link]);
     }
 
-    function savePhoto (photo) {
+    function savePhoto(photo) {
         if (isPhotoSaved(photo))
             return;
 
         DATA_STORE.saved = DATA_STORE.saved.concat(photo);
         DATA_STORE.savedByLink[photo.link] = photo;
         update(appElement, app);
+        persistData();
     }
 
-    function unsavePhoto (photo) {
+    function unsavePhoto(photo) {
         if (!isPhotoSaved(photo))
             return;
 
@@ -55,6 +89,7 @@ define('app', function (require) {
             return prev;
         }, []);
         update(appElement, app);
+        persistData();
     }
 
     // -------- components ----------
@@ -74,7 +109,7 @@ define('app', function (require) {
 
         render() {
             return (
-                el('div', { 'class': 'photo' },
+                el('article', { 'class': 'photo' },
                     el('img', { src: this.photo.media.m }),
                     el('h2', {}, this.photo.author),
                     el('button', { onClick: this.toggleSave.bind(this) }, this.isSaved() ? 'unsave' : 'save')
@@ -83,11 +118,50 @@ define('app', function (require) {
         }
     }
 
+    class NavTab {
+        constructor(routeName) {
+            this.routeName = routeName;
+        }
+
+        onClick(evt) {
+            evt.preventDefault();
+            updateRoute(this.routeName);
+        }
+
+        render() {
+            let isActive = getCurrentRoute() === this.routeName;
+            return el('a', {
+                href: this.routeName,
+                'class': 'navitem' + (isActive ? ' active' : ''),
+                onClick: this.onClick.bind(this),
+            }, this.routeName);
+        }
+    }
+
     class App {
+
+        renderSaved() {
+            return el('section', { 'class': 'photos' },
+                getSavedPhotos().map((attrs) => new Photo(attrs))
+            )
+        }
+
+        renderPhotos() {
+            return el('section', { 'class': 'photos' },
+                getPhotos().map((attrs) => new Photo(attrs))
+            );
+        }
+
         render() {
             return (
-                el('div', { 'class': 'photos' },
-                    getPhotos().map((attrs) => new Photo(attrs))
+                el('article', { 'class': 'main' },
+                    getCurrentRoute() === 'feed' ?
+                    this.renderPhotos() :
+                    this.renderSaved(),
+                    el('nav', { 'class': 'navbar' },
+                        new NavTab('feed'),
+                        new NavTab('saved')
+                    )
                 )
             )
         }
@@ -97,7 +171,6 @@ define('app', function (require) {
 
     let appElement = document.getElementById('main');
     let app = new App();
-
 
     jsonp(
         'http://api.flickr.com/services/feeds/photos_public.gne?format=json',
