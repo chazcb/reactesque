@@ -1,42 +1,67 @@
+/* eslint-env es6 */
 (function () {
     'use strict';
+    // ------ utils
+    let jsonp = (function () {
+        const body = document.body;
+        function _jsonp (url, callbackName, onResponse) {
+            let script = document.createElement('script');
+            script.async = true;
+            script.src = 'http://api.flickr.com/services/feeds/photos_public.gne?format=json';
+            window[callbackName] = (results) => {
+                onResponse(results);
+                body.removeChild(script);
+                window[callbackName] = null;
+            }
+            body.appendChild(script);
+        };
+        return _jsonp;
+    })();
 
-
-    var data = {
-        photos: [],
-        photosByUrl: {}
-    };
-
-    function getPhotos () {
-        let script = document.createElement('script');
-        script.async = true;
-        script.src = 'http://api.flickr.com/services/feeds/photos_public.gne?format=json';
-        window.jsonFlickrFeed = (results) => {
-            console.log(results);
-            document.body.removeChild(script);
-            window.jsonFlickrFeed = null;
-        }
-        document.body.appendChild(script);
-    }
+    // ------- virtualdom
 
     function getHtml (elementTree) {
-        console.log(elementTree);
-        return '<h1>Hi!</h1>';
+        function _cleanTree (node) {
+            if (node.render)
+                node = node.render();
+            node.children = node.children.reduce((prev, curr) =>  prev.concat(curr), [])
+            node.children = node.children.map(_cleanTree);
+            return node;
+        }
+
+        function _drawAttrs (attrs) {
+            return Object.keys(attrs).reduce((prev, key) => `${prev} ${key}=\"${attrs[key]}\"`, '')
+        }
+
+        function _drawHtml (prev, curr) {
+            let attrs = _drawAttrs(curr.attrs);
+            if (curr.children.length > 0) {
+                let inner = curr.children.reduce(_drawHtml, '');
+                return `${prev}<${curr.name}${attrs}>${inner}</${curr.name}>`
+            }
+            return `${prev}<${curr.name}${attrs}/>`
+        }
+
+        return [elementTree].map(_cleanTree).reduce(_drawHtml, '');
     }
 
     function el (name, attrs) {
-        let children = Array.prototype.slice(arguments, 2);
-        console.log('children', children);
+        let children = Array.prototype.slice.call(arguments, 2);
         return {
             name: name,
             attrs: attrs,
-            children: children
+            children: children,
         }
     }
 
+    // --------- application
+
+    let DATA_STORE = {
+        photos: [],
+        photosByLink: {}
+    };
 
     class Photo {
-
         constructor(data) {
             this.data = data;
         }
@@ -44,35 +69,49 @@
         render() {
             return (
                 el('div', {'class': 'photo'},
-                    el('img', {src: this.data.url})
+                    el('img', {src: this.data.media.m})
                 )
             )
         }
     }
 
     class App {
-
         constructor(rootEl) {
             this.rootEl = rootEl;
         }
 
-        init() {
-            this.rootEl.innerHtml = getHtml(this.render());
+        updateVirtualDom() {
+            this.rootEl.innerHTML = getHtml(this);
         }
 
         render() {
             return (
                 el('div', {'class': 'photos'},
-                    data.photos.map((attrs) => Photo(attrs))
+                    DATA_STORE.photos.map((attrs) => new Photo(attrs))
                 )
             )
         }
     }
 
+    function processFeed (response) {
+        let changed;
+        response.items.forEach((item) => {
+            if (!DATA_STORE.photosByLink[item.link]) {
+                changed = true;
+                DATA_STORE.photos.push(item);
+                DATA_STORE.photosByLink[item.link] = item;
+            }
+        });
+        if (changed)
+            window.app.updateVirtualDom();
+    }
 
-    window.app = new App({el: document.getElementById('main')});
-    window.app.init();
+    jsonp(
+        'http://api.flickr.com/services/feeds/photos_public.gne?format=json',
+        'jsonFlickrFeed',
+        processFeed
+    );
 
-    getPhotos();
-
+    window.app = new App(document.getElementById('main'));
+    window.app.updateVirtualDom();
 })();
