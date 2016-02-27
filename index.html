@@ -5,6 +5,19 @@
 </head>
 <body>
 <div id="main">Loading</div>
+<script>
+(function (win) {
+    var modules = {};
+    win.require = function require (name) {
+        if (!modules[name])
+            throw new Error(name + ' is not defined.');
+        return modules[name];
+    }
+    win.define = function define (name, fn) {modules[name] = fn(require);};
+})(window);
+</script>
+<script src="scripts/utils.js"></script>
+<script src="scripts/dom.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
