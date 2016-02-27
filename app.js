@@ -32,11 +32,12 @@ define('app', function (require) {
     }
 
     function isPhotoSaved (photo) {
-        Boolean(DATA_STORE.savedByLink[photo.link]);
+        return Boolean(DATA_STORE.savedByLink[photo.link]);
     }
 
     function savePhoto (photo) {
-        if (isPhotoSaved(photo)) return;
+        if (isPhotoSaved(photo))
+            return;
 
         DATA_STORE.saved = DATA_STORE.saved.concat(photo);
         DATA_STORE.savedByLink[photo.link] = photo;
@@ -44,13 +45,15 @@ define('app', function (require) {
     }
 
     function unsavePhoto (photo) {
-        if (!isPhotoSaved(photo)) return;
+        if (!isPhotoSaved(photo))
+            return;
 
         delete DATA_STORE.savedByLink[photo.link];
         DATA_STORE.saved = DATA_STORE.saved.reduce((prev, curr) => {
-            if (curr.link !== photo.link) prev.push(curr)
+            if (curr.link !== photo.link)
+                prev.push(curr)
             return prev;
-        });
+        }, []);
         update(appElement, app);
     }
 
@@ -71,10 +74,10 @@ define('app', function (require) {
 
         render() {
             return (
-                el('div', {'class': 'photo'},
-                    el('img', {src: this.photo.media.m}),
+                el('div', { 'class': 'photo' },
+                    el('img', { src: this.photo.media.m }),
                     el('h2', {}, this.photo.author),
-                    el('button', {onClick: this.toggleSave.bind(this) }, this.isSaved() ? 'unsave' : 'save')
+                    el('button', { onClick: this.toggleSave.bind(this) }, this.isSaved() ? 'unsave' : 'save')
                 )
             )
         }
@@ -83,7 +86,7 @@ define('app', function (require) {
     class App {
         render() {
             return (
-                el('div', {'class': 'photos'},
+                el('div', { 'class': 'photos' },
                     getPhotos().map((attrs) => new Photo(attrs))
                 )
             )

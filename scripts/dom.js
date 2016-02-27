@@ -14,27 +14,38 @@ define('scripts/dom', function () {
         return node;
     }
 
-    function drawAttrs (attrs) {
-        return Object.keys(attrs).reduce((prev, key) => `${prev} ${key}=\"${attrs[key]}\"`, '')
+    function setAttrs (element, attrs) {
+        return Object.keys(attrs).reduce((el, key) => {
+            if (key.indexOf('on') === 0) {
+                let eventName = key.replace('on', '').toLowerCase();
+                element.addEventListener(eventName, attrs[key]);
+            } else
+                el.setAttribute(key, attrs[key]);
+            return el;
+        }, element);
     }
 
-    function drawNodes (prev, node) {
-        if (typeof node === 'string')
-            return prev + node;
-
-        let attrs = drawAttrs(node.attrs);
-        if (node.children.length > 0) {
-            let inner = node.children.reduce(drawNodes, '');
-            return `${prev}<${node.name}${attrs}>${inner}</${node.name}>`
+    function drawNodes (parent, node) {
+        var element;
+        if (typeof node === 'string') {
+            element = document.createTextNode(node);
+        } else {
+            element = setAttrs(document.createElement(node.name), node.attrs);
         }
 
-        return `${prev}<${node.name}${attrs}/>`
+        if (node.children) {
+            element = node.children.reduce(drawNodes, element);
+        }
+
+        parent.appendChild(element);
+        return parent;
     }
 
     function update (rootId, elementTree) {
         let newTree = [elementTree].map(_cleanTree);
-        let newHtml = newTree.reduce(drawNodes, '');
-        rootId.innerHTML = newHtml;
+        let newElements = newTree.reduce(drawNodes, document.createDocumentFragment());
+        rootId.innerHTML = '';
+        rootId.appendChild(newElements);
     }
 
     function el (name, attrs) {
