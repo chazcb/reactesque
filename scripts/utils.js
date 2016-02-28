@@ -3,7 +3,7 @@ define('scripts/utils', function () {
     return {
         jsonp: (function () {
             const body = document.body;
-            function _jsonp (url, callbackName, onResponse) {
+            function jsonp(url, callbackName, onResponse) {
                 let script = document.createElement('script');
                 script.async = true;
                 script.src = url;
@@ -14,7 +14,7 @@ define('scripts/utils', function () {
                 }
                 body.appendChild(script);
             };
-            return _jsonp;
+            return jsonp;
         })()
     };
 });

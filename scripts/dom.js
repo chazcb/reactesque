@@ -1,9 +1,7 @@
 define('scripts/dom', function () {
     'use strict';
 
-    const TEXT_NODE = 'textnode';
-
-    function _cleanTree (node) {
+    function _cleanTree(node) {
         if (node.render)
             node = node.render();
 
@@ -14,7 +12,7 @@ define('scripts/dom', function () {
         return node;
     }
 
-    function setAttrs (element, attrs) {
+    function setAttrs(element, attrs) {
         return Object.keys(attrs).reduce((el, key) => {
             if (key.indexOf('on') === 0) {
                 let eventName = key.replace('on', '').toLowerCase();
@@ -25,7 +23,7 @@ define('scripts/dom', function () {
         }, element);
     }
 
-    function drawNodes (parent, node) {
+    function drawNodes(parent, node) {
         var element;
         if (typeof node === 'string') {
             element = document.createTextNode(node);
@@ -41,14 +39,14 @@ define('scripts/dom', function () {
         return parent;
     }
 
-    function update (rootId, elementTree) {
+    function update(rootId, elementTree) {
         let newTree = [elementTree].map(_cleanTree);
         let newElements = newTree.reduce(drawNodes, document.createDocumentFragment());
         rootId.innerHTML = '';
         rootId.appendChild(newElements);
     }
 
-    function el (name, attrs) {
+    function el(name, attrs) {
         let children = Array.prototype.slice.call(arguments, 2);
         return {
             name: name,
