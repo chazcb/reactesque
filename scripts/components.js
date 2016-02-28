@@ -98,7 +98,7 @@ define('scripts/components', function (require, window) {
 
         _fetchPhotos(callback) {
             if (this._fetchInProgress) return;
-            window.console.info('Getting more photos');
+            window.console.info('Getting more photos.');
             this._fetchInProgress = true;
             jsonp(
                 'http://api.flickr.com/services/feeds/photos_public.gne?format=json',

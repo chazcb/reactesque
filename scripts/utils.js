@@ -27,20 +27,6 @@ define('scripts/utils', function (require, window) {
         }
     }
 
-    function forEach (list, fn, ctx) {
-        if (!list || !list.length) return;
-
-        for (let i=0; i < list.length; i++)
-            fn.call(ctx, list[i]);
-    }
-
-    function forRange (number, fn, ctx) {
-        if (!number) return;
-
-        for (let i = 0; i < number; i++)
-            fn.call(ctx, i);
-    }
-
     function throttle (fn, numberOfMsBetweenCalls, ctx) {
         let lastTime = null;
         let timeout = null;
@@ -56,6 +42,10 @@ define('scripts/utils', function (require, window) {
                 timeout = window.setTimeout(() => fn.apply(ctx, args), numberOfMsBetweenCalls + 1);
             }
         };
+    }
+
+    function flatten(list) {
+        return list.reduce((prev, curr) =>  prev.concat(curr), [])
     }
 
     const JSONP_MS_TIMEOUT = 3 * 1000;
@@ -88,8 +78,7 @@ define('scripts/utils', function (require, window) {
         })(),
 
         Timer,
-        forEach,
-        forRange,
+        flatten,
         throttle
     };
 });
