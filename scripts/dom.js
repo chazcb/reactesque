@@ -1,13 +1,13 @@
-define('scripts/dom', function () {
+define('scripts/dom', function (require, window) {
     'use strict';
 
-    function _cleanTree(node) {
+    function cleanTree(node) {
         if (node.render)
             node = node.render();
 
         if (node.children) {
             node.children = node.children.reduce((prev, curr) =>  prev.concat(curr), [])
-            node.children = node.children.map(_cleanTree);
+            node.children = node.children.map(cleanTree);
         }
         return node;
     }
@@ -26,9 +26,9 @@ define('scripts/dom', function () {
     function drawNodes(parent, node) {
         var element;
         if (typeof node === 'string') {
-            element = document.createTextNode(node);
+            element = window.document.createTextNode(node);
         } else {
-            element = setAttrs(document.createElement(node.name), node.attrs);
+            element = setAttrs(window.document.createElement(node.name), node.attrs);
         }
 
         if (node.children) {
@@ -39,24 +39,30 @@ define('scripts/dom', function () {
         return parent;
     }
 
-    function update(rootId, elementTree) {
-        let newTree = [elementTree].map(_cleanTree);
-        let newElements = newTree.reduce(drawNodes, document.createDocumentFragment());
-        rootId.innerHTML = '';
-        rootId.appendChild(newElements);
-    }
-
     function el(name, attrs) {
         let children = Array.prototype.slice.call(arguments, 2);
         return {
-            name: name,
-            attrs: attrs,
-            children: children,
+            name,
+            attrs,
+            children,
+        }
+    }
+
+    class DOM {
+        constructor(element) {
+            this.el = element;
+        }
+
+        update(elementTree) {
+            let newTree = [elementTree].map(cleanTree);
+            let newElements = newTree.reduce(drawNodes, window.document.createDocumentFragment());
+            this.el.innerHTML = ''; // TODO: don't do this, do something else
+            this.el.appendChild(newElements);
         }
     }
 
     return {
-        el: el,
-        update: update,
+        el,
+        DOM,
     };
 });

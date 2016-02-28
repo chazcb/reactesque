@@ -14,11 +14,13 @@
             throw new Error(name + ' is not defined.');
         return modules[name];
     }
-    win.define = function define (name, fn) {modules[name] = fn(require);};
+    win.define = function define (name, fn) {modules[name] = fn(require, win);};
 })(window);
 </script>
 <script src="scripts/utils.js"></script>
 <script src="scripts/dom.js"></script>
+<script src="scripts/data.js"></script>
+<script src="scripts/components.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
