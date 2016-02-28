@@ -16,10 +16,12 @@ define('scripts/components', function (require, window) {
         render() {
             return (
                 el('article', { 'class': 'photo' },
-                    el('img', {
-                        src: this.props.photo.media.m,
-                        alt: this.props.photo.title
-                    }),
+                    el('a', { href: this.props.photo.link },
+                        el('img', {
+                            src: this.props.photo.media.m,
+                            alt: this.props.photo.title
+                        })
+                    ),
                     el('h1', {}, this.props.photo.author),
                     el('button', { onClick: this.toggleSave.bind(this) }, this.props.isSaved ? 'unsave' : 'save')
                 )
@@ -101,8 +103,10 @@ define('scripts/components', function (require, window) {
             jsonp(
                 'http://api.flickr.com/services/feeds/photos_public.gne?format=json',
                 'jsonFlickrFeed',
-                (response) => {
+                (response, error) => {
                     this._fetchInProgress = false;
+                    if (error)
+                        return void window.console.error('Timeout fetching photos.');
                     callback(response.items);
                 }
             );
