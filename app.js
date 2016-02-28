@@ -8,8 +8,13 @@ define('app', function (require) {
     // -------- data ---------
 
     const STORAGE_KEY = '__virta__';
+
     function persistData() {
-        localStorage[STORAGE_KEY] = JSON.stringify(DATA_STORE);
+        // Only save saved photos
+        localStorage[STORAGE_KEY] = JSON.stringify({
+            saved: DATA_STORE.saved,
+            savedByLink: DATA_STORE.savedByLink
+        });
     }
 
     function getInitialData() {
@@ -49,16 +54,36 @@ define('app', function (require) {
         return DATA_STORE.saved;
     }
 
-    function updatePhotos(items) {
-        let changed;
+
+    function fetchPhotos(callback) {
+        jsonp(
+            'http://api.flickr.com/services/feeds/photos_public.gne?format=json',
+            'jsonFlickrFeed',
+            (response) => callback(response.items)
+        );
+    }
+
+    function refreshPhotoFeed(items) {
+        DATA_STORE.photos = items;
         items.forEach((item) => {
-            if (!DATA_STORE.photosByLink[item.link]) {
-                changed = true;
+            DATA_STORE.photosByLink[item.link] = item;
+        });
+        update(appElement, app);
+        persistData();
+    }
+
+    function updatePhotoFeed(items) {
+        let updated = false;
+
+        items.forEach((item) => {
+            if (!DATA_STORE.savedByLink[item.link]) {
                 DATA_STORE.photos.push(item);
                 DATA_STORE.photosByLink[item.link] = item;
+                updated = true;
             }
         });
-        if (changed) {
+
+        if (updated) {
             update(appElement, app);
             persistData();
         }
@@ -146,9 +171,19 @@ define('app', function (require) {
             )
         }
 
+        refresh() {
+            fetchPhotos(refreshPhotoFeed);
+        }
+
+        loadMore() {
+            fetchPhotos(updatePhotoFeed);
+        }
+
         renderPhotos() {
             return el('section', { 'class': 'photos' },
-                getPhotos().map((attrs) => new Photo(attrs))
+                el('button', { onClick: this.refresh.bind(this) }, 'Refresh'),
+                getPhotos().map((attrs) => new Photo(attrs)),
+                el('button', { onClick: this.loadMore.bind(this) }, 'Load more')
             );
         }
 
@@ -172,12 +207,7 @@ define('app', function (require) {
     let appElement = document.getElementById('main');
     let app = new App();
 
-    jsonp(
-        'http://api.flickr.com/services/feeds/photos_public.gne?format=json',
-        'jsonFlickrFeed',
-        (response) => updatePhotos(response.items)
-    );
-
+    fetchPhotos(refreshPhotoFeed);
     update(appElement, app);
 
     return app;
