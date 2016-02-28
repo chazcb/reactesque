@@ -15,6 +15,23 @@ define('scripts/utils', function (require, window) {
                 body.appendChild(script);
             };
             return jsonp;
-        })()
+        })(),
+
+        throttle: (fn, numberOfMsBetweenCalls, ctx) => {
+            var lastTime = null;
+            var timeout = null;
+            return function throttle() {
+                window.clearTimeout(timeout);
+                var args = arguments;
+                var currentTime = Date.now();
+                if (!lastTime || (currentTime - lastTime >= numberOfMsBetweenCalls)) {
+                    lastTime = currentTime;
+                    fn.apply(ctx, args);
+                } else {
+                    // ugly hack to make sure trailing edge calls call eventually ...
+                    timeout = window.setTimeout(() => fn.apply(ctx, args), numberOfMsBetweenCalls + 1);
+                }
+            };
+        }
     };
 });

@@ -1,9 +1,11 @@
 define('app', function (require, window) {
     'use strict';
 
+    let jsonp = require('scripts/utils').jsonp;
+    let throttle = require('scripts/utils').throttle;
+
     let el = require('scripts/dom').el;
     let DOM = require('scripts/dom').DOM;
-    let jsonp = require('scripts/utils').jsonp;
 
     let Photo = require('scripts/components').Photo;
     let NavTab = require('scripts/components').NavTab;
@@ -13,13 +15,22 @@ define('app', function (require, window) {
     const dom = new DOM(window.document.getElementById('main'));
     const store = new PhotoAppStorage('__virta__');
 
-    function fetchPhotos(callback) {
-        jsonp(
-            'http://api.flickr.com/services/feeds/photos_public.gne?format=json',
-            'jsonFlickrFeed',
-            (response) => callback(response.items)
-        );
-    }
+    let fetchPhotos = (() => {
+        let inProgress = false;
+        function fetchPhotos(callback) {
+            if (inProgress) return;
+            inProgress = true;
+            jsonp(
+                'http://api.flickr.com/services/feeds/photos_public.gne?format=json',
+                'jsonFlickrFeed',
+                (response) => {
+                    inProgress = false;
+                    callback(response.items);
+                }
+            );
+        }
+        return fetchPhotos;
+    })();
 
     class Container {
         savePhoto(photo) {
@@ -53,7 +64,7 @@ define('app', function (require, window) {
         }
 
         renderSavedView() {
-            return el('section', { 'class': 'saved-photos photos' },
+            return el('section', { 'class': 'saved photos' },
                 store.getSavedPhotos().map(this.renderPhoto.bind(this))
             )
         }
@@ -67,7 +78,7 @@ define('app', function (require, window) {
         }
 
         renderFeedView() {
-            return el('section', { 'class': 'photos' },
+            return el('section', { 'class': 'feed photos' },
                 el('button', { onClick: this.refreshPhotos.bind(this) }, 'Refresh'),
                 store.getPhotos().map(this.renderPhoto.bind(this)),
                 el('button', { onClick: this.loadMorePhotos.bind(this) }, 'Load more')
@@ -92,6 +103,19 @@ define('app', function (require, window) {
     // ------------- init -------------
     let app = new Container();
     store.onChange(() => dom.update(app));
+
+    // When we get within a full viewport height from the end
+    // of the scrollheight we should fetch more photos.
+    let containerHeight = dom.el.offsetHeight;
+    dom.el.addEventListener('scroll', throttle((evt) => {
+        let scrollBottom = evt.target.scrollTop + containerHeight;
+        let targetScroll = evt.target.scrollHeight - containerHeight;
+        if (scrollBottom >= targetScroll) {
+            window.console.info('Getting more photos');
+            fetchPhotos(store.updatePhotoFeed.bind(store));
+        }
+    }, 250));
+
     fetchPhotos(store.refreshPhotoFeed.bind(store));
     return app;
 });
