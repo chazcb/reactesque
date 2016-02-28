@@ -1,10 +1,10 @@
-define('scripts/utils', function () {
+define('scripts/utils', function (require, window) {
     'use strict';
     return {
         jsonp: (function () {
-            const body = document.body;
+            const body = window.document.body;
             function jsonp(url, callbackName, onResponse) {
-                let script = document.createElement('script');
+                let script = window.document.createElement('script');
                 script.async = true;
                 script.src = url;
                 window[callbackName] = (results) => {
