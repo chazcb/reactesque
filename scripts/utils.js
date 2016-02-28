@@ -27,40 +27,69 @@ define('scripts/utils', function (require, window) {
         }
     }
 
+    function forEach (list, fn, ctx) {
+        if (!list || !list.length) return;
+
+        for (let i=0; i < list.length; i++)
+            fn.call(ctx, list[i]);
+    }
+
+    function forRange (number, fn, ctx) {
+        if (!number) return;
+
+        for (let i = 0; i < number; i++)
+            fn.call(ctx, i);
+    }
+
+    function throttle (fn, numberOfMsBetweenCalls, ctx) {
+        let lastTime = null;
+        let timeout = null;
+        return function throttle() {
+            window.clearTimeout(timeout);
+            const args = arguments;
+            const currentTime = Date.now();
+            if (!lastTime || (currentTime - lastTime >= numberOfMsBetweenCalls)) {
+                lastTime = currentTime;
+                fn.apply(ctx, args);
+            } else {
+                // ugly hack to make sure trailing edge calls call eventually ...
+                timeout = window.setTimeout(() => fn.apply(ctx, args), numberOfMsBetweenCalls + 1);
+            }
+        };
+    }
+
+    const JSONP_MS_TIMEOUT = 3 * 1000;
+
     return {
         jsonp: (function () {
             const body = window.document.body;
             function jsonp(url, callbackName, onResponse) {
+
                 const script = window.document.createElement('script');
                 script.async = true;
                 script.src = url;
-                window[callbackName] = (results) => {
-                    onResponse(results);
+
+                const timeout = window.setTimeout(function onTimeout() {
+                    onResponse(null, 'timeout');
                     body.removeChild(script);
                     window[callbackName] = null;
+                }, JSONP_MS_TIMEOUT);
+
+                window[callbackName] = (results) => {
+                    onResponse(results, null);
+                    body.removeChild(script);
+                    window[callbackName] = null;
+                    window.clearTimeout(timeout);
                 }
+
                 body.appendChild(script);
             };
             return jsonp;
         })(),
 
         Timer,
-
-        throttle: (fn, numberOfMsBetweenCalls, ctx) => {
-            let lastTime = null;
-            let timeout = null;
-            return function throttle() {
-                window.clearTimeout(timeout);
-                const args = arguments;
-                const currentTime = Date.now();
-                if (!lastTime || (currentTime - lastTime >= numberOfMsBetweenCalls)) {
-                    lastTime = currentTime;
-                    fn.apply(ctx, args);
-                } else {
-                    // ugly hack to make sure trailing edge calls call eventually ...
-                    timeout = window.setTimeout(() => fn.apply(ctx, args), numberOfMsBetweenCalls + 1);
-                }
-            };
-        }
+        forEach,
+        forRange,
+        throttle
     };
 });
