@@ -74,6 +74,7 @@ define('scripts/data', function (require, window) {
 
         refreshPhotoFeed(items) {
             this.STORE.photos = items;
+            this.STORE.photosByLink = {};
             items.forEach((item) => {
                 this.STORE.photosByLink[item.link] = item;
             });
@@ -84,7 +85,7 @@ define('scripts/data', function (require, window) {
             let updated = false;
 
             items.forEach((item) => {
-                if (!this.STORE.savedByLink[item.link]) {
+                if (!this.STORE.photosByLink[item.link]) {
                     this.STORE.photos.push(item);
                     this.STORE.photosByLink[item.link] = item;
                     updated = true;
