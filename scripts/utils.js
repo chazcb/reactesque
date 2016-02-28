@@ -1,10 +1,37 @@
 define('scripts/utils', function (require, window) {
     'use strict';
+
+    class Timer {
+        constructor(name, fn, milliseconds) {
+            this.name = name;
+            this.fn = fn;
+            this.ms = milliseconds;
+        }
+
+        start() {
+            if (this.timeout) return;
+            window.console.info(`Starting ${this.name} timer`);
+            function timeout () {
+                this.fn();
+                this.timeout = null;
+                this.start(); // restart the timer
+            }
+            this.timeout = window.setTimeout(timeout.bind(this), this.ms);
+        }
+
+        stop() {
+            if (!this.timeout) return;
+            window.console.info(`Stopping ${this.name} timer`);
+            window.clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+    }
+
     return {
         jsonp: (function () {
             const body = window.document.body;
             function jsonp(url, callbackName, onResponse) {
-                let script = window.document.createElement('script');
+                const script = window.document.createElement('script');
                 script.async = true;
                 script.src = url;
                 window[callbackName] = (results) => {
@@ -17,13 +44,15 @@ define('scripts/utils', function (require, window) {
             return jsonp;
         })(),
 
+        Timer,
+
         throttle: (fn, numberOfMsBetweenCalls, ctx) => {
-            var lastTime = null;
-            var timeout = null;
+            let lastTime = null;
+            let timeout = null;
             return function throttle() {
                 window.clearTimeout(timeout);
-                var args = arguments;
-                var currentTime = Date.now();
+                const args = arguments;
+                const currentTime = Date.now();
                 if (!lastTime || (currentTime - lastTime >= numberOfMsBetweenCalls)) {
                     lastTime = currentTime;
                     fn.apply(ctx, args);

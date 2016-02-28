@@ -22,7 +22,7 @@ define('scripts/data', function (require, window) {
         }
 
         load() {
-            var previous = {};
+            let previous = {};
             try {
                 previous = JSON.parse(window.localStorage[this.storageKey]);
             } catch (e) {};

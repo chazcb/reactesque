@@ -24,7 +24,7 @@ define('scripts/dom', function (require, window) {
     }
 
     function drawNodes(parent, node) {
-        var element;
+        let element;
         if (typeof node === 'string') {
             element = window.document.createTextNode(node);
         } else {
@@ -48,6 +48,19 @@ define('scripts/dom', function (require, window) {
         }
     }
 
+    class Component {
+        constructor(props) {
+            let propTypes = this.constructor.propTypes;
+            Object.keys(propTypes).forEach((key) => {
+                if (typeof props[key] !== propTypes[key])
+                    window.console.warn(`Expected ${key} to be of type "${propTypes[key]}" but was ${typeof props[key]} instead.`);
+            });
+            this.props = props;
+        }
+    }
+
+    Component.propTypes = {};
+
     class DOM {
         constructor(element) {
             this.el = element;
@@ -62,6 +75,7 @@ define('scripts/dom', function (require, window) {
     }
 
     return {
+        Component,
         el,
         DOM,
     };
