@@ -1,8 +1,7 @@
-body {
+html, body {
     font-family: sans-serif;
-}
-
-html, body{
+    margin: 0;
+    padding: 0;
     height: 100%;
     width: 100%;
     overflow: hidden;
@@ -17,10 +16,18 @@ html, body{
 
 .photos {
     border: thin solid gray;
+    margin-bottom: 50px;
 }
 
-.photo {
+.photos .photo {
     border: thin solid black;
+    border-radius: 2px;
+    margin: 4px;
+}
+
+.photos .photo img {
+    width: auto;
+    height: 170px;
 }
 
 .navbar {
