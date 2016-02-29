@@ -18,11 +18,18 @@ define('scripts/dom', function (require, window) {
         }, element);
     }
 
+    const SVG_TYPES = { svg: 1, defs: 1, path: 1, g: 1 };
+
     // Given a node returns a valid DOM element.
     function buildElement(node) {
-        return typeof node === 'string' ?
-            window.document.createTextNode(node) :
-            setAttrs(window.document.createElement(node.name), node.attrs);
+        if (typeof node === 'string')
+            return window.document.createTextNode(node)
+
+        let element = SVG_TYPES[node.name] ?
+            window.document.createElementNS('http://www.w3.org/2000/svg', node.name) :
+            window.document.createElement(node.name);
+
+        return setAttrs(element, node.attrs);
     }
 
     // Given a node tree, draw the node and children as DOM elements.
@@ -50,7 +57,7 @@ define('scripts/dom', function (require, window) {
             return node;
 
         if (node instanceof Component)
-            node = node.render();
+            node = prepareTree(node.render());
 
         if (node.children)
             node.children = flatten(node.children).map(prepareTree);

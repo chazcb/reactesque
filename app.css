@@ -5,6 +5,7 @@ html, body {
     height: 100%;
     width: 100%;
     overflow: hidden;
+    background-color: #fafafa;
 }
 
 #main {
@@ -15,19 +16,39 @@ html, body {
 }
 
 .photos {
-    border: thin solid gray;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
     margin-bottom: 50px;
 }
 
+.photos .photo-wrapper {
+    background-color: white;
+    border: thin solid #efefef;
+    border-radius: 4px;
+    margin: 20px 0;
+    padding: 20px 0 30px 0;
+}
+
 .photos .photo {
-    border: thin solid black;
-    border-radius: 2px;
-    margin: 4px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.photos .photo .heart {
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 
 .photos .photo img {
-    width: auto;
-    height: 170px;
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 100px;
+    padding: 0;
+    margin: 0;
 }
 
 .navbar {
