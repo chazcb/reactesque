@@ -32,16 +32,7 @@ define('src/components', function (require, window) {
         isActive: 'boolean',
     }
 
-    function getTitle(title) {
-        title = title.trim();
-        return title || 'no title';
-    }
-
     let _authorReg = /\(([^\)]+)\)/;
-    function getAuthor(authorText) {
-        let match = authorText.match(_authorReg);
-        return match ? match[1] : authorText;
-    }
 
     class Photo extends Component {
         toggleSave() {
@@ -51,14 +42,24 @@ define('src/components', function (require, window) {
                 this.props.savePhoto();
         }
 
+        getTitle() {
+            let title = this.props.photo.title.trim();
+            return title || 'no title';
+        }
+
+        getAuthor() {
+            let match = this.props.photo.author.match(_authorReg);
+            return match ? match[1] : this.props.photo.author;
+        }
+
         render() {
             let dateTaken = this.props.photo.date_taken;
-            let title = getTitle(this.props.photo.title);
+            let title = this.getTitle();
             return (
                 el('article', null,
                     el('div', { 'class': 'topbar' },
                         el('time', { datetime: dateTaken }, daysAgo(dateTaken)),
-                        el('a', { href: this.props.photo.link, rel: 'author' }, getAuthor(this.props.photo.author))
+                        el('a', { href: this.props.photo.link, rel: 'author' }, this.getAuthor())
                     ),
                     el('div', { 'class': 'photo', onClick: this.toggleSave.bind(this) },
                         new Heart({ isActive: this.props.isSaved }),
@@ -79,6 +80,7 @@ define('src/components', function (require, window) {
         savePhoto: 'function',
         unsavePhoto: 'function',
     }
+
 
     class NavTab extends Component {
         onClick(evt) {
