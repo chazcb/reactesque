@@ -64,6 +64,7 @@ html, body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: block;
 }
 
 .photos article .topbar time {
@@ -89,6 +90,7 @@ html, body {
     min-height: 100px;
     padding: 0;
     margin: 0;
+    image-rendering: crisp-edges;
 }
 
 .photos article h1 {
