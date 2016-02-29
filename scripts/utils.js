@@ -59,7 +59,7 @@ define('scripts/utils', function (require, window) {
 
         getScreenHeight() {
             if (!this._screenHeight)
-                this._screenHeight = window.screen.height;
+                this._screenHeight = window.innerHeight;
             return this._screenHeight
         }
 

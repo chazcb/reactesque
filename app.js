@@ -1,8 +1,8 @@
 define('app', function (require, window) {
     'use strict';
 
-    const throttle = require('scripts/utils').throttle;
     const Timer = require('scripts/utils').Timer;
+    const ScrollTracker = require('scripts/utils').ScrollTracker;
 
     const DOM = require('scripts/dom').DOM;
 
@@ -16,11 +16,19 @@ define('app', function (require, window) {
     // Set up the outer container for the application, the data store and wire
     // it to the virtual dom implementation. When the store changes, tell the
     // dom to recalculate the tree.
+    const data = new PhotoAppStorage('__virta__');
+    const scroller = new ScrollTracker();
     const dom = new DOM(window.document.getElementById('main'));
-    const app = new Container({ store: new PhotoAppStorage('__virta__') });
-    app.props.store.onChange(() => {
-        dom.update(app)
 
+    const app = new Container({
+        dom: dom,
+        store: data,
+        scroller: scroller,
+    });
+
+    data.onChange(() => {
+        dom.update(app)
+        scroller.invalidate();
         if (app.props.store.getCurrentRoute() !== 'feed')
             idleTimer.stop();
     });
@@ -31,28 +39,30 @@ define('app', function (require, window) {
     const idleTimer = new Timer('idle', app.refreshPhotos.bind(app), IDLE_TIMEOUT);
     idleTimer.start();
 
-    // When we get within a full viewport height from the end
-    // of the scrollheight we should fetch more photos.
-    const containerHeight = dom.el.offsetHeight;
-    const halfContainerHeight = containerHeight / 2;
-    dom.el.addEventListener('scroll', throttle((evt) => {
+    scroller.onScroll(() => {
 
-        if (app.props.store.getCurrentRoute() !== 'feed')
+        const currentRoute = app.props.store.getCurrentRoute();
+
+        // If we're not on the 'feed' route then stop the idle timer
+        // and don't do anything else.
+        if (currentRoute !== 'feed')
             return void idleTimer.stop();
 
-        const scrollTop = evt.target.scrollTop;
-        const scrollBottom = scrollTop + containerHeight;
-        const targetScroll = evt.target.scrollHeight - containerHeight;
-
-        if (scrollTop <= halfContainerHeight)
+        // If we're within half a screen height of the top of the document
+        // then we can start the idle timer again.
+        if (scroller.getScrollTop() <= (scroller.getScreenHeight() / 2))
             idleTimer.start();
         else
             idleTimer.stop();
 
-        if (scrollBottom >= targetScroll)
+        // If we are within one full screen of the bottom of the document
+        // then it's time to grab more photos!
+        if (scroller.getScrollBottom() >= (scroller.getDocumentHeight() - scroller.getScreenHeight()))
             app.loadMorePhotos();
-    }, 250));
+    });
 
+    dom.update(app);
     app.refreshPhotos();
+
     return app;
 });

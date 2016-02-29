@@ -1,10 +1,12 @@
+::-webkit-scrollbar {
+    display: none;
+}
+
 html, body {
     font-family: sans-serif;
     margin: 0;
     padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
+    overflow-x: hidden;
     background-color: #fafafa;
 }
 
@@ -12,14 +14,16 @@ html, body {
     overflow: auto;
     height: 100%;
     width: 100%;
-    padding-right: 15px;
+    /*padding-right: 15px;*/
 }
 
 .photos {
+    border-left: 1px solid #efefef;
+    border-right: 1px solid #e4e4e4;
     max-width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 50px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    padding: 10px 40px 100px 40px;
 }
 
 .photos .refresh {
@@ -29,7 +33,30 @@ html, body {
     font-size: 12px;
     display: block;
     text-align: center;
-    margin: 10px 0;
+    margin-bottom: 15px;
+}
+
+.empty-wrapper {
+    width: 100%;
+    display: table;
+}
+.empty-wrapper .empty {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.photos .loading-up,
+.photos .nothing-here {
+    color: #9c9c9c;
+    font-weight: 300;
+    font-size: 12px;
+    display: block;
+    text-align: center;
+}
+
+.photos .nothing-here .heart {
+    line-height: 14px;
 }
 
 .photos article {
@@ -97,6 +124,8 @@ html, body {
     font-size: 12px;
     margin: 10px 5px;
     font-weight: 400;
+    display: block;
+    overflow: hidden;
 }
 
 .photos article h1 a {
@@ -110,18 +139,26 @@ html, body {
 }
 
 .navbar {
+    max-width: 400px;
+    margin: 0 auto;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     background-color: white;
-    border: thin solid red;
+    width: 100%;
+    display: table;
 }
 
 .navbar .navitem {
-    display: block;
-    width: 50%;
-    float: left;
+    display: table-cell;
     height: 50px;
     text-align: center;
+    width: 50%;
+    vertical-align: middle;
+    border: thin solid #9c9c9c;
+}
+
+.navbar .navitem.active {
+    background-color: red;
 }

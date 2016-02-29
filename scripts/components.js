@@ -115,6 +115,39 @@ define('scripts/components', function (require, window) {
     }
 
 
+    class Button extends Component {
+        onClick(evt) {
+            evt.preventDefault();
+            this.props.onClick();
+        }
+
+        render() {
+            return el('a', {
+                href: '#',
+                'class': this.props.class,
+                onClick: this.onClick.bind(this)
+            }, this.props.text);
+        }
+    }
+
+    Button.propTypes = {
+        'class': 'string',
+        onClick: 'function',
+        text: 'string',
+    }
+
+
+
+    function createEmpty(height) {
+        // TODO: this could be done in the DOM lib instead of here
+        //       by allowing Component constructor to have multiple args.
+        let children = Array.prototype.slice.call(arguments, 1);
+        return el('div', {
+            'class': 'empty-wrapper',
+            style: `height:${height}px;`
+        }, el('div', { 'class': 'empty' }, children));
+    }
+
     class Container extends Component {
         savePhoto(photo) {
             this.props.store.savePhoto(photo);
@@ -146,10 +179,9 @@ define('scripts/components', function (require, window) {
             })
         }
 
-        renderSavedView() {
-            return el('section', { 'class': 'saved photos' },
-                this.props.store.getSavedPhotos().map(this.renderPhoto.bind(this))
-            )
+        _getAvailableScreenHeight() {
+            // substract height of navbar
+            return this.props.scroller.getScreenHeight() - 50;
         }
 
         _fetchPhotos(callback) {
@@ -176,20 +208,47 @@ define('scripts/components', function (require, window) {
             this._fetchPhotos(this.props.store.updatePhotoFeed.bind(this.props.store));
         }
 
+        renderSavedView() {
+
+            const photos = this.props.store.getSavedPhotos();
+
+            return photos.length ?
+                el('div', null, photos.map(this.renderPhoto.bind(this))) :
+                createEmpty(this._getAvailableScreenHeight(),
+                    new Button({
+                        onClick: this.updateRoute.bind(this, 'feed'),
+                        text: 'save photos with',
+                        'class': 'refresh load-more'
+                    }),
+                    new Heart({ isActive: true })
+                )
+        }
+
         renderFeedView() {
-            return el('section', { 'class': 'feed photos' },
-                el('a', { href: '#', 'class': 'refresh', onClick: this.refreshPhotos.bind(this) }, 'refresh ↺'),
-                this.props.store.getPhotos().map(this.renderPhoto.bind(this)),
-                el('a', { href: '#', 'class': 'refresh', onClick: this.loadMorePhotos.bind(this) }, 'load more ↻')
-            );
+            const photos = this.props.store.getPhotos();
+            if (photos.length) {
+                return el('div', null,
+                    new Button({ onClick: this.refreshPhotos.bind(this), text: 'refresh ↺', 'class': 'refresh' }),
+                    this.props.store.getPhotos().map(this.renderPhoto.bind(this)),
+                    new Button({ onClick: this.loadMorePhotos.bind(this), text: 'load more ↻', 'class': 'refresh load-more' })
+                );
+            } else {
+                return createEmpty(this._getAvailableScreenHeight(), new Button({
+                    onClick: this.loadMorePhotos.bind(this),
+                    text: 'loading ...',
+                    'class': 'refresh load-more'
+                }))
+            }
         }
 
         render() {
             return (
-                el('article', { 'class': 'main' },
-                    this.props.store.getCurrentRoute() === 'feed' ?
-                    this.renderFeedView() :
-                    this.renderSavedView(),
+                el('div', { 'class': 'main' },
+                    el('section', { 'class': 'photos' },
+                        this.props.store.getCurrentRoute() === 'feed' ?
+                        this.renderFeedView() :
+                        this.renderSavedView()
+                    ),
                     el('nav', { 'class': 'navbar' },
                         this.renderNavTab('Photo Feed', 'feed'),
                         this.renderNavTab('My Saved Photos', 'saved')
@@ -200,7 +259,8 @@ define('scripts/components', function (require, window) {
     }
 
     Container.propTypes = {
-        store: 'object'
+        store: 'object',
+        scroller: 'object',
     }
 
     return {
