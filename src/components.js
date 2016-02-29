@@ -138,16 +138,19 @@ define('src/components', function (require, window) {
     }
 
 
-
-    function createEmpty(height) {
-        // TODO: this could be done in the DOM lib instead of here
-        //       by allowing Component constructor to have multiple args.
-        let children = Array.prototype.slice.call(arguments, 1);
-        return el('div', {
-            'class': 'empty-wrapper',
-            style: `height:${height}px;`
-        }, el('div', { 'class': 'empty' }, children));
+    class Empty extends Component {
+        render() {
+            return el('div', {
+                'class': 'empty-wrapper',
+                style: `height:${this.props.height}px;`
+            }, el('div', { 'class': 'empty' }, this.children))
+        }
     }
+
+    Empty.propTypes = {
+        height: 'number',
+    }
+
 
     const IDLE_TIMEOUT = 60 * 1000;
 
@@ -261,7 +264,7 @@ define('src/components', function (require, window) {
 
             return photos.length ?
                 el('div', null, photos.map(this.renderPhoto.bind(this))) :
-                createEmpty(this._getAvailableScreenHeight(),
+                new Empty({ height: this._getAvailableScreenHeight() },
                     new Button({
                         onClick: this.updateRoute.bind(this, 'feed'),
                         text: 'save photos with',
@@ -280,11 +283,13 @@ define('src/components', function (require, window) {
                     new Button({ onClick: this.loadMorePhotos.bind(this), text: 'load more ↻', 'class': 'refresh load-more' })
                 );
             } else {
-                return createEmpty(this._getAvailableScreenHeight(), new Button({
-                    onClick: this.loadMorePhotos.bind(this),
-                    text: 'loading ...',
-                    'class': 'refresh load-more'
-                }))
+                return new Empty({ height: this._getAvailableScreenHeight() },
+                    new Button({
+                        onClick: this.loadMorePhotos.bind(this),
+                        text: 'loading ...',
+                        'class': 'refresh load-more'
+                    })
+                )
             }
         }
 
