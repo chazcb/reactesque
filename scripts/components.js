@@ -158,6 +158,7 @@ define('scripts/components', function (require, window) {
         }
 
         updateRoute(routeName) {
+            window.location.hash = routeName;
             this.props.store.updateRoute(routeName);
         }
 

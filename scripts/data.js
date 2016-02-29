@@ -38,7 +38,7 @@ define('scripts/data', function (require, window) {
 
         initialState() {
             return {
-                currentRoute: 'feed',
+                currentRoute: window.location.hash ? window.location.hash.slice(1) : 'feed',
                 saved: [],
                 savedByLink: {},
                 photos: [],
