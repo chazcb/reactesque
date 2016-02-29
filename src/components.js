@@ -1,9 +1,10 @@
-define('scripts/components', function (require, window) {
+define('src/components', function (require, window) {
     'use strict';
 
-    const el = require('scripts/dom').el;
-    const Component = require('scripts/dom').Component;
-    const jsonp = require('scripts/utils').jsonp;
+    const el = require('lib/dom').el;
+    const Component = require('lib/dom').Component;
+    const jsonp = require('lib/utils').jsonp;
+    const Timer = require('lib/utils').Timer;
 
     class Heart extends Component {
         render() {
@@ -148,7 +149,52 @@ define('scripts/components', function (require, window) {
         }, el('div', { 'class': 'empty' }, children));
     }
 
+    const IDLE_TIMEOUT = 60 * 1000;
+
     class Container extends Component {
+
+        onDataChange () {
+            this.props.dom.update(this);
+            this.props.scroller.invalidate();
+            if (this.props.store.getCurrentRoute() !== 'feed')
+                this.idleTimer.stop();
+        }
+
+        onScroll () {
+            const currentRoute = this.props.store.getCurrentRoute();
+
+            // If we're not on the 'feed' route then stop the idle timer
+            // and don't do anything else.
+            if (currentRoute !== 'feed')
+                return void this.idleTimer.stop();
+
+            // If we're within half a screen height of the top of the document
+            // then we can start the idle timer again.
+            if (this.props.scroller.getScrollTop() <= (this.props.scroller.getScreenHeight() / 2))
+                this.idleTimer.start();
+            else
+                this.idleTimer.stop();
+
+            // If we are within one full screen of the bottom of the document
+            // then it's time to grab more photos!
+            if (this.props.scroller.getScrollBottom() >= (this.props.scroller.getDocumentHeight() - this.props.scroller.getScreenHeight()))
+                this.loadMorePhotos();
+        }
+
+        init() {
+            this.idleTimer = new Timer('idle', this.refreshPhotos.bind(this), IDLE_TIMEOUT);
+
+            this.props.scroller.onScroll(this.onScroll.bind(this));
+            this.props.store.onChange(this.onDataChange.bind(this));
+
+            this.idleTimer.start();
+
+            this.props.dom.update(this);
+            this.refreshPhotos();
+
+            return this;
+        }
+
         savePhoto(photo) {
             this.props.store.savePhoto(photo);
         }
@@ -262,6 +308,7 @@ define('scripts/components', function (require, window) {
     Container.propTypes = {
         store: 'object',
         scroller: 'object',
+        dom: 'object',
     }
 
     return {
