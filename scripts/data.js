@@ -105,7 +105,7 @@ define('scripts/data', function (require, window) {
             if (this.isPhotoSaved(photo))
                 return;
 
-            this.STORE.saved = this.STORE.saved.concat(photo);
+            this.STORE.saved = [photo].concat(this.STORE.saved);
             this.STORE.savedByLink[photo.link] = photo;
             this.persist();
         }

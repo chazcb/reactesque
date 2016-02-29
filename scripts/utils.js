@@ -27,6 +27,53 @@ define('scripts/utils', function (require, window) {
         }
     }
 
+    class ScrollTracker {
+        constructor() {
+            this._handlers = [];
+            this._onScroll = throttle(this._onScroll, 250, this);
+            this.invalidate = throttle(this.invalidate, 250, this);
+
+            window.addEventListener('scroll', this._onScroll);
+            window.addEventListener('resize', this.invalidate);
+        }
+
+        _onScroll(evt) {
+            // call any attached handlers
+            this._scrollTop = window.document.body.scrollTop;
+            this._handlers.forEach((fn) => fn(evt, this));
+        }
+
+        getScrollTop() {
+            return this._scrollTop > 0 ? this._scrollTop : window.document.body.scrollTop;
+        }
+
+        invalidate() {
+            // invalidate previous screen height calculations
+            this._screenHeight = null;
+            this._docHeight = null;
+        }
+
+        onScroll(handler) {
+            this._handlers.push(handler)
+        }
+
+        getScreenHeight() {
+            if (!this._screenHeight)
+                this._screenHeight = window.screen.height;
+            return this._screenHeight
+        }
+
+        getDocumentHeight() {
+            if (!this._docHeight)
+                this._docHeight = window.document.body.scrollHeight;
+            return this._docHeight;
+        }
+
+        getScrollBottom() {
+            return this.getScrollTop() + this.getScreenHeight();
+        }
+    }
+
     function throttle (fn, numberOfMsBetweenCalls, ctx) {
         let lastTime = null;
         let timeout = null;
@@ -78,6 +125,7 @@ define('scripts/utils', function (require, window) {
         })(),
 
         Timer,
+        ScrollTracker,
         flatten,
         throttle
     };
