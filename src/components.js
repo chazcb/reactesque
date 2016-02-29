@@ -5,6 +5,7 @@ define('src/components', function (require, window) {
     const Component = require('lib/dom').Component;
     const jsonp = require('lib/utils').jsonp;
     const Timer = require('lib/utils').Timer;
+    const daysAgo = require('lib/utils').daysAgo;
 
     class Heart extends Component {
         render() {
@@ -29,20 +30,6 @@ define('src/components', function (require, window) {
 
     Heart.propTypes = {
         isActive: 'boolean',
-    }
-
-
-    function daysAgo(time) {
-        let msAgo = Date.now() - new Date(time);
-        let daysAgo = Math.ceil(msAgo / 1000 / 60 / 60 / 24)
-
-        if (daysAgo === 0)
-            return 'today';
-
-        if (daysAgo === 1)
-            return 'yesterday';
-
-        return `${daysAgo} days ago`;
     }
 
     function getTitle(title) {
