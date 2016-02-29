@@ -31,6 +31,30 @@ define('scripts/components', function (require, window) {
     }
 
 
+    function daysAgo(time) {
+        let msAgo = Date.now() - new Date(time);
+        let daysAgo = Math.ceil(msAgo / 1000 / 60 / 60 / 24)
+
+        if (daysAgo === 0)
+            return 'today';
+
+        if (daysAgo === 1)
+            return 'yesterday';
+
+        return `${daysAgo} days ago`;
+    }
+
+    function getTitle(title) {
+        title = title.trim();
+        return title || 'no title';
+    }
+
+    let _authorReg = /\(([^\)]+)\)/;
+    function getAuthor(authorText) {
+        let match = authorText.match(_authorReg);
+        return match ? match[1] : authorText;
+    }
+
     class Photo extends Component {
         toggleSave() {
             if (this.props.isSaved)
@@ -39,34 +63,23 @@ define('scripts/components', function (require, window) {
                 this.props.savePhoto();
         }
 
-        timeAgo() {
-            let msAgo = Date.now() - new Date(this.props.photo.date_taken);
-            let daysAgo = Math.ceil(msAgo / 1000 / 60 / 60 / 24)
-
-            if (daysAgo === 0)
-                return 'today';
-
-            if (daysAgo === 1)
-                return 'yesterday';
-
-            return `${daysAgo} days`;
-        }
-
         render() {
+            let dateTaken = this.props.photo.date_taken;
+            let title = getTitle(this.props.photo.title);
             return (
-                el('article', { 'class': 'photo-wrapper' },
-                    el('h1', { 'class': 'title' },
-                        this.props.photo.title,
-                        el('small', {}, this.timeAgo())
+                el('article', null,
+                    el('div', { 'class': 'topbar' },
+                        el('time', { datetime: dateTaken }, daysAgo(dateTaken)),
+                        el('a', { href: this.props.photo.link, rel: 'author' }, getAuthor(this.props.photo.author))
                     ),
                     el('div', { 'class': 'photo', onClick: this.toggleSave.bind(this) },
                         new Heart({ isActive: this.props.isSaved }),
                         el('img', {
                             src: this.props.photo.media.m,
-                            alt: this.props.photo.title
+                            alt: title
                         })
                     ),
-                    el('a', { href: this.props.photo.link, rel: 'author' }, this.props.photo.author)
+                    el('h1', null, el('a', { href: this.props.photo.link }, title))
                 )
             )
         }
@@ -165,9 +178,9 @@ define('scripts/components', function (require, window) {
 
         renderFeedView() {
             return el('section', { 'class': 'feed photos' },
-                el('button', { onClick: this.refreshPhotos.bind(this) }, 'Refresh'),
+                el('a', { href: '#', 'class': 'refresh', onClick: this.refreshPhotos.bind(this) }, 'refresh ↺'),
                 this.props.store.getPhotos().map(this.renderPhoto.bind(this)),
-                el('button', { onClick: this.loadMorePhotos.bind(this) }, 'Load more')
+                el('a', { href: '#', 'class': 'refresh', onClick: this.loadMorePhotos.bind(this) }, 'load more ↻')
             );
         }
 

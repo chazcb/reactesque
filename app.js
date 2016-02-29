@@ -18,7 +18,12 @@ define('app', function (require, window) {
     // dom to recalculate the tree.
     const dom = new DOM(window.document.getElementById('main'));
     const app = new Container({ store: new PhotoAppStorage('__virta__') });
-    app.props.store.onChange(() => dom.update(app));
+    app.props.store.onChange(() => {
+        dom.update(app)
+
+        if (app.props.store.getCurrentRoute() !== 'feed')
+            idleTimer.stop();
+    });
 
     // If the user is near the top of the feed and has been idle for 60 seconds
     // we'll refresh the feed. Normally I'd maintain the countdown in data.js but
@@ -31,6 +36,10 @@ define('app', function (require, window) {
     const containerHeight = dom.el.offsetHeight;
     const halfContainerHeight = containerHeight / 2;
     dom.el.addEventListener('scroll', throttle((evt) => {
+
+        if (app.props.store.getCurrentRoute() !== 'feed')
+            return void idleTimer.stop();
+
         const scrollTop = evt.target.scrollTop;
         const scrollBottom = scrollTop + containerHeight;
         const targetScroll = evt.target.scrollHeight - containerHeight;
