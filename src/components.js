@@ -227,8 +227,13 @@ define('src/components', function (require, window) {
             if (this._fetchInProgress) return;
             window.console.info('Getting more photos');
             this._fetchInProgress = true;
+
+            let protocol = window.document.location.origin.indexOf('https://') === 0 ?
+                'https' :
+                'http';
+
             jsonp(
-                'http://api.flickr.com/services/feeds/photos_public.gne?format=json',
+                protocol + '://api.flickr.com/services/feeds/photos_public.gne?format=json',
                 'jsonFlickrFeed',
                 (response, error) => {
                     this._fetchInProgress = false;
