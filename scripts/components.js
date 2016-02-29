@@ -103,7 +103,7 @@ define('scripts/components', function (require, window) {
                 href: this.props.href,
                 'class': 'navitem' + (this.props.isActive ? ' active' : ''),
                 onClick: this.onClick.bind(this),
-            }, this.props.title);
+            }, el('span', null, this.props.title));
         }
     }
 
@@ -186,7 +186,7 @@ define('scripts/components', function (require, window) {
 
         _fetchPhotos(callback) {
             if (this._fetchInProgress) return;
-            window.console.info('Getting more photos.');
+            window.console.info('Getting more photos');
             this._fetchInProgress = true;
             jsonp(
                 'http://api.flickr.com/services/feeds/photos_public.gne?format=json',
@@ -194,7 +194,7 @@ define('scripts/components', function (require, window) {
                 (response, error) => {
                     this._fetchInProgress = false;
                     if (error)
-                        return void window.console.error('Timeout fetching photos.');
+                        return void window.console.error('Timeout fetching photos');
                     callback(response.items);
                 }
             );
@@ -250,8 +250,8 @@ define('scripts/components', function (require, window) {
                         this.renderSavedView()
                     ),
                     el('nav', { 'class': 'navbar' },
-                        this.renderNavTab('Photo Feed', 'feed'),
-                        this.renderNavTab('My Saved Photos', 'saved')
+                        this.renderNavTab('photos', 'feed'),
+                        this.renderNavTab('my saved', 'saved')
                     )
                 )
             )
